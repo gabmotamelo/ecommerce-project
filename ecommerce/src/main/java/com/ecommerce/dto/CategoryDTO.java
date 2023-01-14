@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -19,7 +19,8 @@ public class CategoryDTO {
     @Schema(description = "Products category Id.")
     private Long id;
 
-    @NotBlank
+
+    @NotNull
     @Size(min = 2, max = 40)
     @Schema(description = "Products category name.")
     private String categoryName;
@@ -28,7 +29,7 @@ public class CategoryDTO {
     @Schema(description = "Product category description.")
     private String categoryDescription;
 
-    @NotBlank
+    @NotNull
     @Schema(description = "Product category url's image.")
     private String imageUrl;
 
