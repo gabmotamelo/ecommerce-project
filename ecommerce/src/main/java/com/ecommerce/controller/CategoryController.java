@@ -1,9 +1,9 @@
 package com.ecommerce.controller;
 
-import com.ecommerce.dto.CategoryDTO;
-import com.ecommerce.exception.CategoryAlreadyExistsException;
+import com.ecommerce.dto.request.CategoryDTO;
+import com.ecommerce.dto.response.MessageResponseDTO;
+import com.ecommerce.exception.CategoryNameAlreadyExistsException;
 import com.ecommerce.exception.CategoryNotFoundException;
-import com.ecommerce.model.Category;
 import com.ecommerce.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,6 +20,7 @@ import java.util.List;
 @RequestMapping("/category")
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class CategoryController{
+    // Swagger UI - http://localhost:8080/swagger-ui-category/index.html
 
     private final CategoryService categoryService;
 
@@ -30,7 +31,7 @@ public class CategoryController{
     })
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryDTO createCategory(@RequestBody @Valid CategoryDTO categoryDTO) throws CategoryAlreadyExistsException {
+    public CategoryDTO createCategory(@RequestBody @Valid CategoryDTO categoryDTO) throws CategoryNameAlreadyExistsException {
         return categoryService.createCategory(categoryDTO);
     }
 
@@ -44,6 +45,13 @@ public class CategoryController{
     @GetMapping("/{name}")
     public CategoryDTO listCategoryByName(@PathVariable String name) throws CategoryNotFoundException {
         return categoryService.listCategoryByName(name);
+    }
+
+    @Operation(summary = "Update category by ID.")
+    @PostMapping("/{name}/update")
+    @ResponseStatus(HttpStatus.OK)
+    public MessageResponseDTO updateCategory(@PathVariable String name, @RequestBody @Valid CategoryDTO categoryDTO) throws CategoryNotFoundException, CategoryNameAlreadyExistsException {
+        return categoryService.update(name, categoryDTO);
     }
 
 

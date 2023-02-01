@@ -1,9 +1,11 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.builder.CategoryDTOBuilder;
-import com.ecommerce.dto.CategoryDTO;
+import com.ecommerce.dto.request.CategoryDTO;
+import com.ecommerce.dto.response.MessageResponseDTO;
 import com.ecommerce.exception.CategoryNotFoundException;
 import com.ecommerce.service.CategoryService;
+import com.ecommerce.utils.JsonConvertionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 public class CategoryControllerTest {
+
+    private static final String CATEGORY_API_URL_PATH = "/category";
+
+    private static final String VALID_CATEGORY_NAME = "Soccer Updated";
+
+    private static final long VALID_CATEGORY_ID = 1L;
+
+    private static final String CATEGORY_API_SUBPATH_UPDATE_URL = "/update";
 
     private MockMvc mockMvc;
 
@@ -117,10 +127,63 @@ public class CategoryControllerTest {
 
         // then
         mockMvc.perform(MockMvcRequestBuilders.get("/category")
-                .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].categoryName", is(categoryDTO.getCategoryName())))
                 .andExpect(jsonPath("$[0].categoryDescription", is(categoryDTO.getCategoryDescription())))
                 .andExpect(jsonPath("$[0].imageUrl", is(categoryDTO.getImageUrl())));
     }
+
+    @Test
+    void whenGETListWithoutCategoriesIsCalledThenOkStatusIsReturned() throws Exception {
+        // given
+        CategoryDTO categoryDTO = CategoryDTOBuilder.builder().build().toCategoryDTO();
+
+        //when
+        when(categoryService.listAll()).thenReturn(Collections.singletonList(categoryDTO));
+
+        // then
+        mockMvc.perform(MockMvcRequestBuilders.get("/category")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void whenUPDATEIsCalledToThenOKStatusIsReturned() throws Exception {
+        CategoryDTO categoryDTOToUpdate = CategoryDTO
+                .builder()
+                .categoryName(VALID_CATEGORY_NAME)
+                .build();
+
+        CategoryDTO categoryDTO = CategoryDTOBuilder.builder().build().toCategoryDTO();
+        categoryDTO.setCategoryName(categoryDTOToUpdate.getCategoryName());
+
+        MessageResponseDTO  messageResponseDTO = MessageResponseDTO.builder().build();
+
+        when(categoryService.update(VALID_CATEGORY_NAME, categoryDTO)).thenReturn(messageResponseDTO);
+
+        mockMvc.perform(MockMvcRequestBuilders.post(CATEGORY_API_URL_PATH + "/" + VALID_CATEGORY_NAME + CATEGORY_API_SUBPATH_UPDATE_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonConvertionUtils.asJsonString(categoryDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is(messageResponseDTO.getMessage())));
+    }
+
+    @Test
+    void whenUPDATEIsCalledWithNonExistentNameThenNotFoundExceptionStatusIsReturned() throws Exception {
+        CategoryDTO categoryDTOToUpdate = CategoryDTOBuilder
+                .builder()
+                .id(2L)
+                .categoryName("Teste nome atualizado")
+                .build()
+                .toCategoryDTO();
+
+        when(categoryService.update(categoryDTOToUpdate.getCategoryName(), categoryDTOToUpdate)).thenThrow(CategoryNotFoundException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders.post(CATEGORY_API_URL_PATH + "/" + categoryDTOToUpdate.getCategoryName() + CATEGORY_API_SUBPATH_UPDATE_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonConvertionUtils.asJsonString(categoryDTOToUpdate)))
+                .andExpect(status().isNotFound());
+    }
+
 }

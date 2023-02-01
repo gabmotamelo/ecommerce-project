@@ -1,6 +1,6 @@
 package com.ecommerce.builder;
 
-import com.ecommerce.dto.CategoryDTO;
+import com.ecommerce.dto.request.CategoryDTO;
 import lombok.Builder;
 
 @Builder

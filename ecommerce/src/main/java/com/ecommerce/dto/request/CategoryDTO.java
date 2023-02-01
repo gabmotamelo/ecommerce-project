@@ -1,10 +1,7 @@
-package com.ecommerce.dto;
+package com.ecommerce.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -17,8 +14,8 @@ import javax.validation.constraints.Size;
 public class CategoryDTO {
 
     @Schema(description = "Products category Id.")
+    @Setter(AccessLevel.NONE)
     private Long id;
-
 
     @NotNull
     @Size(min = 2, max = 40)

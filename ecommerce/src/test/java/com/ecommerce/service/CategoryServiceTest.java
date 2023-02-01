@@ -1,8 +1,9 @@
 package com.ecommerce.service;
 
 import com.ecommerce.builder.CategoryDTOBuilder;
-import com.ecommerce.dto.CategoryDTO;
-import com.ecommerce.exception.CategoryAlreadyExistsException;
+import com.ecommerce.dto.request.CategoryDTO;
+import com.ecommerce.dto.response.MessageResponseDTO;
+import com.ecommerce.exception.CategoryNameAlreadyExistsException;
 import com.ecommerce.exception.CategoryNotFoundException;
 import com.ecommerce.mapper.CategoryMapper;
 import com.ecommerce.model.Category;
@@ -19,8 +20,9 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.empty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +37,7 @@ public class CategoryServiceTest {
     private CategoryService categoryService;
 
     @Test
-    void whenPOSTCalledAndCategoryInformedThenItShouldBeCreated() throws CategoryAlreadyExistsException {
+    void whenPOSTCalledAndCategoryInformedThenItShouldBeCreated() throws CategoryNameAlreadyExistsException {
         // given
         CategoryDTO expectedCategoryDTO = CategoryDTOBuilder.builder().build().toCategoryDTO();
         Category expectedSavedCategory = categoryMapper.toModel(expectedCategoryDTO);
@@ -64,7 +66,7 @@ public class CategoryServiceTest {
         when(categoryRepository.findByCategoryName(expectedCategoryDTO.getCategoryName())).thenReturn(Optional.of(duplicatedCategory));
 
         // then
-        assertThrows(CategoryAlreadyExistsException.class, () -> categoryService.createCategory(expectedCategoryDTO));
+        assertThrows(CategoryNameAlreadyExistsException.class, () -> categoryService.createCategory(expectedCategoryDTO));
     }
 
     @Test
@@ -121,4 +123,64 @@ public class CategoryServiceTest {
         assertThat(foundListCategoriesDTO, is(empty()));
     }
 
+    @Test
+    void whenUpdatedIsCalledWithValidIdThenUpdatedCategory() throws CategoryNotFoundException, CategoryNameAlreadyExistsException {
+        //given
+        CategoryDTO expectedCategoryDTO = CategoryDTOBuilder.builder().build().toCategoryDTO();
+        Category expectedSavedCategory = categoryMapper.toModel(expectedCategoryDTO);
+
+        // when
+        when(categoryRepository.findByCategoryName(expectedCategoryDTO.getCategoryName())).thenReturn(Optional.of(expectedSavedCategory));
+        when(categoryRepository.save(any(Category.class))).thenReturn(expectedSavedCategory);
+
+
+        CategoryDTO categoryDTOToUpdate = CategoryDTOBuilder
+                .builder()
+                .categoryName("Teste nome atualizado")
+                .build()
+                .toCategoryDTO();
+
+        // then
+        MessageResponseDTO successMessage = categoryService.update(expectedSavedCategory.getCategoryName(), categoryDTOToUpdate);
+
+        assertEquals("Category successfully updated with ID 1", successMessage.getMessage());
+
+    }
+
+    @Test
+    void whenUpdatedIsCalledWithInvalidIdThenThrowExceptionCategory(){
+
+        CategoryDTO categoryDTOToUpdate = CategoryDTOBuilder
+                .builder()
+                .id(2L)
+                .categoryName("Teste nome atualizado")
+                .build()
+                .toCategoryDTO();
+
+        assertThrows(CategoryNotFoundException.class, () -> categoryService.update(categoryDTOToUpdate.getCategoryName(), categoryDTOToUpdate),"Category with id 2 not found.");
+
+    }
+
+    @Test
+    void whenUpdatedIsCalledWithNameThatAlreadyExistsInTheSystemThenThrowExceptionCategory(){
+        String categoryName = "Teste";
+        //given
+        CategoryDTO expectedCategoryDTO = CategoryDTOBuilder.builder().build().toCategoryDTO();
+        Category expectedSavedCategory = categoryMapper.toModel(expectedCategoryDTO);
+
+        // when
+        when(categoryRepository.findByCategoryName(expectedCategoryDTO.getCategoryName())).thenReturn(Optional.of(expectedSavedCategory));
+        when(categoryRepository.save(any(Category.class))).thenReturn(expectedSavedCategory);
+
+
+        CategoryDTO categoryDTOToUpdate = CategoryDTOBuilder
+                .builder()
+                .categoryName(categoryName)
+                .build()
+                .toCategoryDTO();
+
+        assertThrows(CategoryNameAlreadyExistsException.class, () -> categoryService.update(categoryDTOToUpdate.getCategoryName(), categoryDTOToUpdate));
+
+
+    }
 }

@@ -1,6 +1,6 @@
 package com.ecommerce.mapper;
 
-import com.ecommerce.dto.CategoryDTO;
+import com.ecommerce.dto.request.CategoryDTO;
 import com.ecommerce.model.Category;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

@@ -1,7 +1,8 @@
 package com.ecommerce.service;
 
-import com.ecommerce.dto.CategoryDTO;
-import com.ecommerce.exception.CategoryAlreadyExistsException;
+import com.ecommerce.dto.request.CategoryDTO;
+import com.ecommerce.dto.response.MessageResponseDTO;
+import com.ecommerce.exception.CategoryNameAlreadyExistsException;
 import com.ecommerce.exception.CategoryNotFoundException;
 import com.ecommerce.mapper.CategoryMapper;
 import com.ecommerce.model.Category;
@@ -22,7 +23,7 @@ public class CategoryService {
 
     private final CategoryMapper categoryMapper = CategoryMapper.INSTANCE;
 
-    public CategoryDTO createCategory(CategoryDTO categoryDTO) throws CategoryAlreadyExistsException {
+    public CategoryDTO createCategory(CategoryDTO categoryDTO) throws CategoryNameAlreadyExistsException {
         verifyIfIsAlreadyRegistered(categoryDTO.getCategoryName());
         Category category = categoryMapper.toModel(categoryDTO);
         Category categorySaved = categoryRepository.save(category);
@@ -42,10 +43,10 @@ public class CategoryService {
         return categoryMapper.toDTO(foundCategory);
     }
 
-    private void verifyIfIsAlreadyRegistered(String name) throws CategoryAlreadyExistsException {
+    private void verifyIfIsAlreadyRegistered(String name) throws CategoryNameAlreadyExistsException {
         Optional<Category> optSavedCategory = categoryRepository.findByCategoryName(name);
         if (optSavedCategory.isPresent()) {
-            throw new CategoryAlreadyExistsException(name);
+            throw new CategoryNameAlreadyExistsException(name);
         }
     }
 
@@ -54,5 +55,17 @@ public class CategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException(name));
     }
 
+    public MessageResponseDTO update(String name, CategoryDTO categoryDTO) throws CategoryNotFoundException, CategoryNameAlreadyExistsException {
+        verifyIfExists(name);
+        verifyIfIsAlreadyRegistered(categoryDTO.getCategoryName());
+        Category updatedCategory = categoryMapper.toModel(categoryDTO);
+        Category savedCategory = categoryRepository.save(updatedCategory);
+        return createMessageResponse("Category successfully updated with ID ", savedCategory.getId());
+    }
 
+    private MessageResponseDTO createMessageResponse(String s, Long id2) {
+        return MessageResponseDTO.builder()
+                .message(s + id2)
+                .build();
+    }
 }
